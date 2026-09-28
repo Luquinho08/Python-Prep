@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+/* Tokens de marca Chulada Kids. Los pasteles se usan como fondos/acentos con texto en tinta. */
+@theme {
+  --color-brand-blue: #6ea8df;
+  --color-brand-mint: #b1e9e6;
+  --color-brand-lavender: #a790e2;
+  --color-brand-yellow: #fed669;
+  --color-brand-coral: #fc938e;
+  --color-ink: #303044;
+  --color-ink-soft: #5b5b70;
+  /* Variantes oscuras para texto/foco sobre blanco (contraste ≥ 4.5:1). */
+  --color-blue-strong: #235b91;
+  --color-danger: #a8231b;
+  --color-success: #1f6b45;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f7f8fc;
+  --color-line: #e3e5ef;
+
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1.25rem;
+  --shadow-soft: 0 1px 2px rgb(48 48 68 / 0.06), 0 4px 16px rgb(48 48 68 / 0.06);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-blue-strong);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Contenido enriquecido sanitizado del CMS. */
+.prose-ck p { margin: 0 0 0.75rem; line-height: 1.65; }
+.prose-ck ul, .prose-ck ol { margin: 0 0 0.75rem 1.25rem; }
+.prose-ck ul { list-style: disc; }
+.prose-ck ol { list-style: decimal; }
+.prose-ck h2 { font-size: 1.25rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
+.prose-ck h3 { font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.5rem; }
+.prose-ck a { color: var(--color-blue-strong); text-decoration: underline; }
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0.5rem;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 0.5rem;
+}
