@@ -30,6 +30,7 @@ export type LineIssue = { kind: "unavailable" | "insufficient" | "personalizatio
 
 export type CartLineView = PricedLine & {
   id: string;
+  variantId: string;
   productSlug: string;
   productName: string;
   variantName: string;
@@ -144,6 +145,7 @@ export async function priceLines(opts: {
     const img = images.filter((i) => i.productId === l.productId).sort((a, b) => a.sort - b.sort)[0];
     meta.set(l.id, {
       id: l.id,
+      variantId: l.variantId,
       productSlug: p?.slug ?? "",
       productName: p?.name ?? "Producto no disponible",
       variantName: v?.name ?? "",
