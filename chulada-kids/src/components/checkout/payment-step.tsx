@@ -102,12 +102,29 @@ export function PaymentStep(p: Props) {
         router.push(resultUrl(out.attemptId));
       } else if (out.status === "rejected" || out.status === "cancelled") {
         rotateKey(); // un nuevo intento controlado necesita una clave nueva
+        setError(out.message);
         throw new Error(out.message);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [p.orderId, p.accessToken],
   );
+
+  // Mientras el banco verifica (3DS), se consulta el estado real al backend y se avanza solo.
+  useEffect(() => {
+    if (outcome?.status !== "requires_action") return;
+    const id = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/checkout/${p.orderId}/status?intento=${outcome.attemptId}`, { headers: { "x-order-token": p.accessToken } });
+        const data = await res.json();
+        if (data.ok && data.paymentStatus !== "requires_action") router.push(resultUrl(outcome.attemptId));
+      } catch {
+        /* reintenta en el próximo ciclo */
+      }
+    }, 3000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outcome]);
 
   const initialization = useMemo(() => ({ amount: p.totalCents / 100, payer: { email: p.email } }), [p.totalCents, p.email]);
   const customization = useMemo(() => ({ paymentMethods: { maxInstallments: 12 }, visual: { style: { theme: "default" } } }), []);

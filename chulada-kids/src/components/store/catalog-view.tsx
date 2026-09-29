@@ -138,7 +138,7 @@ export async function CatalogView({
         </p>
       </div>
 
-      <div className="mt-5 lg:grid lg:grid-cols-[250px_1fr] lg:gap-8">
+      <div className="mt-5 lg:grid lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-8">
         <details className="mb-4 rounded-2xl border border-line bg-white lg:hidden" open={false}>
           <summary className="flex min-h-12 cursor-pointer items-center justify-between px-4 font-semibold">
             Filtrar y ordenar {activeFilters ? `(${activeFilters} activos)` : ""}

@@ -349,7 +349,7 @@ export async function applyProviderState(attemptId: string, state: ProviderState
       .update(paymentAttempts)
       .set({
         status: nextAttemptStatus,
-        statusDetail: state.kind === "payments" && state.payments.length === 0 ? attempt.statusDetail : (state.statusDetail ?? state.payments[0]?.statusDetail ?? attempt.statusDetail),
+        statusDetail: state.kind === "payments" && state.payments.length === 0 ? attempt.statusDetail : (state.payments[0]?.statusDetail ?? state.statusDetail ?? attempt.statusDetail),
         providerRef: attempt.providerRef ?? state.providerRef,
         challengeUrl: state.challengeUrl ?? attempt.challengeUrl,
         installments: state.payments[0]?.installments ?? attempt.installments,
@@ -477,7 +477,7 @@ export async function refreshOrderPayment(orderId: string) {
     .from(paymentAttempts)
     .where(and(eq(paymentAttempts.orderId, orderId), or(inArray(paymentAttempts.status, IN_FLIGHT), eq(paymentAttempts.statusDetail, "preference_created"))));
   for (const a of attempts) {
-    if (a.lastCheckedAt && Date.now() - a.lastCheckedAt.getTime() < 5000) continue;
+    if (a.lastCheckedAt && Date.now() - a.lastCheckedAt.getTime() < 1500) continue;
     await reconcileAttempt(a.id).catch(() => null);
   }
 }

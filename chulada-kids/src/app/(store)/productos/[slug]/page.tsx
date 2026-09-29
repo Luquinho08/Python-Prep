@@ -78,7 +78,7 @@ export default async function ProductPage(props: PageProps<"/productos/[slug]">)
         <span>{p.name}</span>
       </nav>
 
-      <div className="mt-4 grid gap-8 lg:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-8 lg:grid-cols-2">
         <Gallery images={images} name={p.name} />
         <div>
           <div className="flex flex-wrap gap-1.5">

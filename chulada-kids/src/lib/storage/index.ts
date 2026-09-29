@@ -17,12 +17,13 @@ export const REFERENCE_MIME = [...IMAGE_MIME, "application/pdf"] as const;
 export class UploadError extends Error {}
 
 function root() {
-  return path.resolve(process.cwd(), env.storageDir);
+  // El directorio de archivos subidos es de datos, no de código: se excluye del trazado del build.
+  return path.resolve(/* turbopackIgnore: true */ process.cwd(), env.storageDir);
 }
 
 function resolveKey(key: string) {
   if (!/^(public|private)\/[a-z0-9-]+\.(webp|pdf)$/.test(key)) throw new Error("Clave de almacenamiento inválida");
-  return path.join(root(), key);
+  return path.join(/* turbopackIgnore: true */ root(), key);
 }
 
 export async function readStored(key: string): Promise<Buffer> {

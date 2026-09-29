@@ -134,7 +134,7 @@ export function CheckoutClient({ initialSummary, prefill, payment, resume }: Pro
 
   if (order) {
     return (
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-5">
           <Alert tone="info" title={`Pedido ${order.orderNumber} creado — falta el pago`}>
             Reservamos los productos hasta las {formatStoreDateTime(order.reservationExpiresAt)}. El pedido se confirma solo cuando Mercado Pago aprueba el pago.{" "}
@@ -167,7 +167,7 @@ export function CheckoutClient({ initialSummary, prefill, payment, resume }: Pro
         e.preventDefault();
         submit(changed?.totalCents ?? summary.totalCents);
       }}
-      className="grid gap-6 lg:grid-cols-[1fr_380px]"
+      className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]"
     >
       <div className="space-y-6">
         <section aria-labelledby="h-datos" className="rounded-card border border-line bg-white p-4 sm:p-5">

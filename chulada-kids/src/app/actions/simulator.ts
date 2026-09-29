@@ -28,7 +28,6 @@ export async function simulatePreferenceAction(formData: FormData) {
 export async function simulateChallengeAction(formData: FormData) {
   assertFake();
   const order = String(formData.get("order"));
-  const ref = await FakeGateway.completeChallenge(order, formData.get("ok") === "1");
-  const [a] = await db.select().from(paymentAttempts).where(eq(paymentAttempts.id, ref));
-  redirect(`/checkout/resultado?pedido=${a.orderId}&t=${encodeURIComponent(orderAccessToken(a.orderId))}&intento=${a.id}`);
+  await FakeGateway.completeChallenge(order, formData.get("ok") === "1");
+  redirect(`/checkout/simulador-3ds?listo=1`);
 }

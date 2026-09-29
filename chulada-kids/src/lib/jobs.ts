@@ -8,6 +8,7 @@ import { IN_FLIGHT } from "./payments/status";
 import { retryFailedWebhooks } from "./payments/webhooks";
 import { processEmailOutbox } from "./email/outbox";
 import { getGateway, refreshOAuthConnection } from "./payments/connection";
+import { deleteMediaIfUnused } from "./storage";
 
 /** Concilia intentos en curso (por si falló una notificación). */
 export async function reconcilePendingAttempts(limit = 30) {
@@ -80,6 +81,23 @@ export async function refreshOAuthTokens() {
   return { refreshed: rows.length };
 }
 
+/**
+ * Minimización de datos: borra referencias privadas subidas por clientes que nunca llegaron a un
+ * carrito vigente ni a un pedido (7 días). Las de pedidos se conservan con el historial.
+ */
+export async function purgeOrphanPrivateUploads(limit = 100) {
+  const rows = await db.execute<{ id: string }>(sql`
+    SELECT m.id FROM media m
+    WHERE m.visibility = 'private' AND m.created_at < now() - interval '7 days'
+      AND NOT EXISTS (SELECT 1 FROM order_lines l WHERE l.personalization::text LIKE '%' || m.id::text || '%')
+      AND NOT EXISTS (SELECT 1 FROM cart_lines c WHERE c.personalization::text LIKE '%' || m.id::text || '%')
+      AND NOT EXISTS (SELECT 1 FROM design_proofs d WHERE d.media_id = m.id)
+    LIMIT ${limit}`);
+  let deleted = 0;
+  for (const r of rows) if (await deleteMediaIfUnused(r.id)) deleted++;
+  return { deleted };
+}
+
 export async function runAllJobs() {
   const out: Record<string, unknown> = {};
   const safe = async (name: string, fn: () => Promise<unknown>) => {
@@ -94,5 +112,6 @@ export async function runAllJobs() {
   await safe("reservations", () => expireReservations());
   await safe("oauth", () => refreshOAuthTokens());
   await safe("emails", () => processEmailOutbox());
+  await safe("privateUploads", () => purgeOrphanPrivateUploads());
   return out;
 }

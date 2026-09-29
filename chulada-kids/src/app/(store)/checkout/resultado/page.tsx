@@ -91,6 +91,10 @@ export default async function ResultPage(props: PageProps<"/checkout/resultado">
         <>
           <h1 className="text-2xl font-bold">Todavía no registramos un pago</h1>
           <p className="mt-2">Si cancelaste en Mercado Pago o cerraste la ventana, tu pedido <strong>{number}</strong> sigue esperando el pago.</p>
+          {typeof sp.intento === "string" ? (
+            <p className="mt-1 text-sm text-ink-soft">Si acabás de pagar, la confirmación puede demorar unos segundos: esta página se actualiza sola.</p>
+          ) : null}
+          <StatusPoller active={typeof sp.intento === "string"} maxTicks={12} />
           {canRetry ? <ButtonLink href={retryHref} className="mt-5">Elegir cómo pagar</ButtonLink> : <ButtonLink href="/carrito" className="mt-5">Volver al carrito</ButtonLink>}
         </>
       );

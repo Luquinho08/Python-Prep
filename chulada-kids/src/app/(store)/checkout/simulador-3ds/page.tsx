@@ -13,7 +13,8 @@ export default async function Sim3dsPage(props: PageProps<"/checkout/simulador-3
     <div className="mx-auto max-w-md px-4 py-8">
       <div className="rounded-card border-2 border-dashed border-danger/60 p-5">
         <p className="text-sm font-bold text-danger">SIMULADOR LOCAL — verificación del banco (3DS)</p>
-        <form action={simulateChallengeAction} target="_top" className="mt-4 grid gap-2">
+        {sp.listo ? <p className="mt-3 font-semibold" role="status">Verificación completada. La tienda continúa automáticamente.</p> : null}
+        <form action={simulateChallengeAction} className="mt-4 grid gap-2" hidden={!!sp.listo}>
           <input type="hidden" name="order" value={typeof sp.order === "string" ? sp.order : ""} />
           <Button name="ok" value="1">Verificación correcta</Button>
           <Button name="ok" value="0" variant="secondary">Verificación fallida</Button>

@@ -57,7 +57,7 @@ describe("checkout (Postgres real)", () => {
   });
 
   it("cupón con un solo uso: dos pedidos simultáneos no lo usan dos veces", async () => {
-    await base.product && db.update(s.productVariants).set({ stockOnHand: 10 }).where(eq(s.productVariants.id, base.product.variant.id));
+    await db.update(s.productVariants).set({ stockOnHand: 10 }).where(eq(s.productVariants.id, base.product.variant.id));
     await db.insert(s.coupons).values({ code: "UNO", kind: "fixed", value: 10000, maxUses: 1, combinableWithPromotions: true });
     const line = { productId: base.product.id, variantId: base.product.variant.id, quantity: 1 };
     const c1 = await makeCart([line], "UNO");

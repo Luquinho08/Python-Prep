@@ -49,8 +49,8 @@ export default async function CartPage(props: PageProps<"/carrito">) {
         </Alert>
       ) : null}
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_360px]">
-        <ul className="space-y-4" aria-label="Productos en el carrito">
+      <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <ul className="min-w-0 space-y-4" aria-label="Productos en el carrito">
           {view.lines.map((l) => (
             <li key={l.id} className="flex gap-3 rounded-card border border-line bg-white p-3 sm:gap-4 sm:p-4">
               <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-surface-soft sm:h-28 sm:w-28">
@@ -85,7 +85,7 @@ export default async function CartPage(props: PageProps<"/carrito">) {
                 {l.appliedPromotions.length ? <p className="mt-1 text-xs">Promoción: {l.appliedPromotions.map((p) => p.name).join(" + ")}</p> : null}
                 {l.issue ? <p className="mt-2 text-sm font-medium text-danger" role="alert">{l.issue.message}</p> : null}
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <form action={updateQuantityAction} className="flex items-center gap-2">
+                  <form action={updateQuantityAction} className="flex flex-wrap items-center gap-2">
                     <input type="hidden" name="lineId" value={l.id} />
                     <label htmlFor={`q-${l.id}`} className="text-sm">Cantidad</label>
                     <input
