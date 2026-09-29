@@ -22,6 +22,13 @@
       "when": 1790638433708,
       "tag": "0002_inquiries",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790639764464,
+      "tag": "0003_session_last_seen",
+      "breakpoints": true
     }
   ]
 }

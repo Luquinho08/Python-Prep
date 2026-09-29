@@ -50,7 +50,7 @@ export const sessions = pgTable(
     userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     expiresAt: ts("expires_at").notNull(),
     createdAt: createdAt(),
-    lastSeenAt: createdAt(),
+    lastSeenAt: ts("last_seen_at").notNull().defaultNow(),
   },
   (t) => [index("sessions_user_idx").on(t.userId)],
 );
