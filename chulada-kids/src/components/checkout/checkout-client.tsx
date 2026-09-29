@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createOrderAction, quoteAction, shippingOptionsAction } from "@/app/actions/checkout";
 import type { CheckoutSummary } from "@/lib/orders/checkout";
@@ -21,8 +22,6 @@ type Props = {
   resume: PlacedOrder | null;
 };
 
-const STORAGE = "ck_checkout_order";
-
 export function CheckoutClient({ initialSummary, prefill, payment, resume }: Props) {
   const [form, setForm] = useState({ ...prefill, postalCode: "", street: "", number: "", apartment: "", city: "", province: "", addressNotes: "", notes: "" });
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -37,22 +36,17 @@ export function CheckoutClient({ initialSummary, prefill, payment, resume }: Pro
   const [order, setOrder] = useState<PlacedOrder | null>(resume);
   const [pending, startTransition] = useTransition();
   const keyRef = useRef<string>("");
+  const router = useRouter();
 
-  // Recuperar un pedido ya creado en esta pestaña (recarga o vuelta atrás) sin duplicarlo.
+  // Clave de idempotencia del checkout: sobrevive a recargas de la pestaña (doble envío = mismo pedido).
   useEffect(() => {
-    if (resume) return;
     try {
-      const saved = sessionStorage.getItem(STORAGE);
-      if (saved) {
-        const parsed = JSON.parse(saved) as PlacedOrder;
-        if (new Date(parsed.reservationExpiresAt) > new Date()) setOrder(parsed);
-      }
       keyRef.current = sessionStorage.getItem("ck_checkout_key") ?? crypto.randomUUID();
       sessionStorage.setItem("ck_checkout_key", keyRef.current);
     } catch {
       keyRef.current = crypto.randomUUID();
     }
-  }, [resume]);
+  }, []);
 
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) => {
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -107,12 +101,12 @@ export function CheckoutClient({ initialSummary, prefill, payment, resume }: Pro
           setOrder(placed);
           setChanged(null);
           try {
-            sessionStorage.setItem(STORAGE, JSON.stringify(placed));
             sessionStorage.removeItem("ck_checkout_key");
           } catch {
             /* sin almacenamiento */
           }
-          window.scrollTo({ top: 0 });
+          // El pedido queda en la URL: una recarga retoma el mismo pedido sin duplicarlo.
+          router.replace(`/checkout?pedido=${placed.orderId}&t=${encodeURIComponent(placed.accessToken)}`, { scroll: true });
         } else if (res.kind === "changed") {
           setChanged(res.summary);
           setSummary(res.summary);
@@ -128,8 +122,8 @@ export function CheckoutClient({ initialSummary, prefill, payment, resume }: Pro
   }
 
   function editData() {
+    router.replace("/checkout");
     try {
-      sessionStorage.removeItem(STORAGE);
       keyRef.current = crypto.randomUUID();
       sessionStorage.setItem("ck_checkout_key", keyRef.current);
     } catch {

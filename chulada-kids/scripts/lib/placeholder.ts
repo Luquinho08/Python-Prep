@@ -2,7 +2,7 @@
  * Genera ilustraciones placeholder propias (SVG → WEBP) claramente rotuladas como demostración.
  * No usan fotos ni marcas de terceros.
  */
-const PALETTE = {
+export const PALETTE = {
   blue: "#6EA8DF",
   mint: "#B1E9E6",
   lavender: "#A790E2",
@@ -11,7 +11,7 @@ const PALETTE = {
   ink: "#303044",
 };
 
-type Motif = "labels" | "stickers" | "cards" | "invite" | "envelope" | "box" | "topper" | "kit" | "banner" | "category";
+export type Motif = "labels" | "stickers" | "cards" | "invite" | "envelope" | "box" | "topper" | "kit" | "banner" | "category";
 
 function esc(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -119,3 +119,5 @@ export function placeholderSvg(opts: { title: string; motif: Motif; accent?: key
   <text x="${w / 2}" y="${h - 60}" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#ffffff" letter-spacing="2">IMAGEN DE DEMOSTRACIÓN</text>
 </svg>`;
 }
+
+export type PaletteColor = keyof typeof PALETTE;

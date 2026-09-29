@@ -62,3 +62,7 @@ export function formatStoreDate(at: Date | string | null | undefined): string {
   const d = typeof at === "string" && /^\d{4}-\d{2}-\d{2}$/.test(at) ? new Date(`${at}T12:00:00Z`) : new Date(at);
   return new Intl.DateTimeFormat("es-AR", { timeZone: STORE_TZ, dateStyle: "long" }).format(d);
 }
+
+export function daysAgoIso(days: number): string {
+  return new Date(Date.now() - days * 86400_000).toISOString();
+}

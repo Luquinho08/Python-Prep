@@ -4,13 +4,14 @@ import { db } from "@/lib/db";
 import { requireStaffPage } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/permissions";
 import { formatARS } from "@/lib/money";
+import { daysAgoIso } from "@/lib/time";
 import { Alert } from "@/components/ui/alert";
 import { Card, PageHeader, Table } from "@/components/admin/ui";
 
 export default async function AdminHome(props: PageProps<"/admin">) {
   const user = await requireStaffPage();
   const sp = await props.searchParams;
-  const since = new Date(Date.now() - 30 * 86400_000).toISOString();
+  const since = daysAgoIso(30);
   const seeSales = can(user.role, "orders:read");
 
   const [[counts], [sales], top, lowStock, [incidents], [inquiries]] = await Promise.all([

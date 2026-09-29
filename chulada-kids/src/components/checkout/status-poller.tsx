@@ -20,8 +20,6 @@ export function StatusPoller({ active }: { active: boolean }) {
 export function ClearCheckoutStorage({ orderId }: { orderId: string }) {
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem("ck_checkout_order");
-      if (saved && JSON.parse(saved).orderId === orderId) sessionStorage.removeItem("ck_checkout_order");
       sessionStorage.removeItem(`ck_pay_key_${orderId}`);
     } catch {
       /* nada */

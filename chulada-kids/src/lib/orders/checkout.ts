@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db";
 import {
@@ -77,6 +77,11 @@ export type CheckoutResult =
 class Changed extends Error {
   constructor(public summary: CheckoutSummary) {
     super("changed");
+  }
+}
+class Existing extends Error {
+  constructor(public orderId: string) {
+    super("existing");
   }
 }
 class Refuse extends Error {
@@ -176,6 +181,12 @@ export async function createOrderFromCart(input: CheckoutInput, ctx: { cartId: s
 
   try {
     const result = await db.transaction(async (tx) => {
+      // 0) Serializa los checkouts del mismo carrito y vuelve a buscar la clave: un doble envío
+      //    concurrente espera al primero y recibe el mismo pedido (no "agotado" ni un duplicado).
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${`checkout:${ctx.cartId}`}))`);
+      const [dup] = await tx.select().from(orders).where(eq(orders.checkoutKey, input.checkoutKey));
+      if (dup) throw new Existing(dup.id);
+
       // 1) Pedidos previos del mismo carrito: si hay un pago en curso, no se crea otro (evita doble cobro).
       const previous = await tx
         .select()
@@ -324,6 +335,10 @@ export async function createOrderFromCart(input: CheckoutInput, ctx: { cartId: s
   } catch (e) {
     if (e instanceof Changed) return { ok: false, kind: "changed", message: "El total cambió desde que lo revisaste (precio, promoción, envío o cupón). Revisá el nuevo resumen y confirmá.", summary: e.summary };
     if (e instanceof Refuse) return { ok: false, kind: "error", message: e.message, pendingOrderId: e.pendingOrderId };
+    if (e instanceof Existing) {
+      const [again] = await db.select().from(orders).where(eq(orders.id, e.orderId));
+      return { ok: true, orderId: again.id, orderNumber: orderNumber(again.number), accessToken: orderAccessToken(again.id), summary: await summaryFromOrder(again.id), reservationExpiresAt: (again.reservationExpiresAt ?? new Date()).toISOString() };
+    }
     // Carrera con la misma checkoutKey (doble clic simultáneo): devolver el pedido ganador.
     if (String((e as { cause?: { code?: string } }).cause?.code ?? (e as { code?: string }).code) === "23505") {
       const [again] = await db.select().from(orders).where(eq(orders.checkoutKey, input.checkoutKey));

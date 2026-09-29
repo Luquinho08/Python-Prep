@@ -10,7 +10,7 @@ import * as s from "../src/lib/db/schema";
 import { hashPassword } from "../src/lib/auth/password";
 import { saveUpload } from "../src/lib/storage";
 import { saveStoreSettings, storeSettingsSchema } from "../src/lib/content/settings";
-import { placeholderSvg } from "./lib/placeholder";
+import { placeholderSvg, type Motif, type PaletteColor } from "./lib/placeholder";
 
 if (process.env.NODE_ENV === "production") {
   console.error("El seed de demostración no se ejecuta en producción.");
@@ -20,7 +20,7 @@ if (process.env.NODE_ENV === "production") {
 const DAY = 86400_000;
 const now = new Date();
 
-async function placeholder(title: string, motif: Parameters<typeof placeholderSvg>[0]["motif"], accent: any, bg: any, w = 1000, h = 1000) {
+async function placeholder(title: string, motif: Motif, accent: PaletteColor, bg: PaletteColor, w = 1000, h = 1000) {
   const png = await sharp(Buffer.from(placeholderSvg({ title, motif, accent, bg, w, h }))).png().toBuffer();
   const row = await saveUpload({
     data: png,
@@ -33,7 +33,7 @@ async function placeholder(title: string, motif: Parameters<typeof placeholderSv
   return row.id;
 }
 
-async function upsertCategory(slug: string, name: string, description: string, sort: number, motif: any, accent: any) {
+async function upsertCategory(slug: string, name: string, description: string, sort: number, motif: Motif, accent: PaletteColor) {
   const [existing] = await db.select().from(s.categories).where(eq(s.categories.slug, slug));
   if (existing) return existing.id;
   const imageId = await placeholder(name, motif, accent, "mint", 800, 800);
@@ -74,9 +74,9 @@ type ProductSeed = {
   themes: string[];
   variants: { sku: string; name: string; price?: number; stock: number }[];
   fields?: Field[];
-  motif: any;
-  accent: any;
-  bg: any;
+  motif: Motif;
+  accent: PaletteColor;
+  bg: PaletteColor;
   minQty?: number;
 };
 

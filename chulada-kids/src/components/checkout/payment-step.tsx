@@ -19,8 +19,6 @@ type Props = {
   walletEnabled: boolean;
 };
 
-let mpInitialized = false;
-
 function newKey() {
   return crypto.randomUUID();
 }
@@ -54,10 +52,8 @@ export function PaymentStep(p: Props) {
     };
   }, [storageKey]);
 
-  if (p.driver === "mercadopago" && p.publicKey && !mpInitialized && typeof window !== "undefined") {
-    initMercadoPago(p.publicKey, { locale: "es-AR" });
-    mpInitialized = true;
-  }
+  // Idempotente: solo registra la Public Key; el SDK se carga cuando se monta un Brick.
+  if (p.driver === "mercadopago" && p.publicKey) initMercadoPago(p.publicKey, { locale: "es-AR" });
 
   const resultUrl = (attemptId?: string) => `/checkout/resultado?pedido=${p.orderId}&t=${encodeURIComponent(p.accessToken)}${attemptId ? `&intento=${attemptId}` : ""}`;
 
