@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Chulada Kids — tienda online
 
-## Getting Started
+Tienda web y panel de administración para **Chulada Kids**, papelería creativa y personalizada (Argentina).
+Next.js 16 + PostgreSQL, cobros con **Mercado Pago Argentina** (tarjeta dentro de la tienda con Card Payment Brick + Orders API; cuenta de Mercado Pago con Wallet Brick).
 
-First, run the development server:
+| Documento | Para qué |
+|---|---|
+| [STATUS.md](STATUS.md) | Qué funciona, qué se probó y cómo, qué falta |
+| [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Auditoría inicial, etapas y mapa de módulos |
+| [DECISIONS.md](DECISIONS.md) | Decisiones de arquitectura y matriz de Mercado Pago |
+| [docs/MERCADO_PAGO.md](docs/MERCADO_PAGO.md) | Cómo conectar, probar y salir a producción con MP |
+| [docs/ADMIN.md](docs/ADMIN.md) | Manual breve del panel |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Despliegue, tareas programadas, backups y secretos |
+
+## Requisitos
+
+- Node.js 22 (mínimo 20.9) y pnpm 10
+- PostgreSQL 16 con las extensiones `unaccent` y `pg_trgm` (las crea la primera migración si el usuario tiene permisos; en Supabase, Neon o RDS están disponibles)
+
+## Puesta en marcha local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd chulada-kids
+pnpm install
+cp .env.example .env            # completar DATABASE_URL y generar los secretos (ver comentarios)
+pnpm db:migrate                 # aplica drizzle/*.sql
+SEED_USER_PASSWORD='elegí-una-clave-larga' pnpm db:seed   # SOLO desarrollo: datos de demostración
+pnpm dev                        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Para desarrollar sin credenciales de Mercado Pago, el `.env` puede usar el **simulador local**:
+`PAYMENTS_DRIVER=fake` y `ALLOW_FAKE_PAYMENTS=true`. Está rotulado en pantalla como "SIMULADOR LOCAL — NO ES MERCADO PAGO" y queda bloqueado en producción.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Usuarios de prueba que crea el seed (contraseña = `SEED_USER_PASSWORD`):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Email | Rol |
+|---|---|
+| owner@chulada.test | Propietario |
+| editor@chulada.test | Editor de catálogo |
+| operador@chulada.test | Operador de pedidos |
+| cliente@chulada.test | Cliente |
 
-## Learn More
+Alta real del propietario (sin contraseñas en el código): `pnpm user:create --email duena@dominio.com --role owner` imprime un enlace de invitación de un solo uso.
 
-To learn more about Next.js, take a look at the following resources:
+## Comandos
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Comando | Qué hace |
+|---|---|
+| `pnpm dev` / `pnpm build` / `pnpm start` | Desarrollo, build de producción, servidor de producción |
+| `pnpm lint` / `pnpm typecheck` | ESLint / TypeScript |
+| `pnpm test` | Vitest: unitarias + integración sobre Postgres real (`chulada_test`) |
+| `pnpm test:e2e` | Playwright: levanta `next dev` en :3100 con la base `chulada_e2e` y el simulador |
+| `pnpm db:generate` / `pnpm db:migrate` | Generar / aplicar migraciones |
+| `pnpm db:seed` | Datos de demostración (se niega a correr con `NODE_ENV=production`) |
+| `pnpm cron` | Ejecuta una vez las tareas programadas (conciliación, reservas, webhooks, emails) |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Para `pnpm test`, crear la base `chulada_test` (o definir `TEST_DATABASE_URL`) y migrarla:
+`DATABASE_URL=postgres://…/chulada_test pnpm db:migrate`. Para `pnpm test:e2e`, crear `chulada_e2e` con las extensiones; en entornos con Chromium propio usar `PLAYWRIGHT_CHROMIUM_PATH`.
 
-## Deploy on Vercel
+## Estructura
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/app/(store)/     tienda pública (inicio, catálogo, ficha, carrito, checkout, cuenta, pedido)
+src/app/admin/       panel privado
+src/app/api/         webhooks, pagos del checkout, subidas, cron, archivos privados
+src/lib/             dominio: pricing, cart, orders, payments, inventory, catalog, auth, storage, email
+drizzle/             migraciones SQL
+scripts/             migrate, seed, create-user, cron
+tests/               unit, integration (Vitest) y e2e (Playwright)
+docs/                guías y capturas (docs/screenshots)
+```

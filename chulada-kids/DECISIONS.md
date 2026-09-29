@@ -75,5 +75,14 @@ Outbox en DB (`email_outbox`) con `dedupe_key` único, reintentos con backoff. D
 ## D-12 · Contenido del CMS
 HTML de descripciones y páginas se sanitiza con `sanitize-html` y lista blanca estricta (sin `script`, `style`, `on*`, `iframe`). Los enlaces se fuerzan a `http(s)`/`mailto`/`tel`.
 
+## D-14 · Botón de pago del Card Payment Brick
+El wrapper `@mercadopago/sdk-react@1.0.7` solo expone `onSubmit` (el hook `useCardPaymentBrick` no ofrece `getFormData`). Por eso la acción que cobra es **el botón propio del Brick**, ubicado junto al resumen final. La etiqueta la define Mercado Pago; la personalización de textos (`customization.visual`) no se verificó. No existe un segundo botón que cobre.
+
+## D-15 · Estados de carga y códigos HTTP
+Un `loading.tsx` en la raíz de la tienda hacía streaming y `notFound()` respondía 200. El esqueleto de carga quedó solo en el listado de productos (`productos/(listado)`); el resto de las páginas responde 404 real. Los estados de acción ("Agregando…", "Guardando…", "Preparando…", pago en proceso con autoactualización) cubren la espera.
+
+## D-16 · Retomar el pago por URL
+El pedido creado queda en la URL (`/checkout?pedido=…&t=…`). Recargar, volver de Mercado Pago o reintentar retoma el mismo pedido sin duplicarlo. El token es un HMAC del id (256 bits); en la base solo se guarda su SHA-256.
+
 ## D-13 · Búsqueda
 `unaccent` + `ILIKE` sobre nombre, descripción corta, etiquetas, categorías y temáticas (SKU solo en admin), con índice `pg_trgm`. Suficiente para un catálogo chico/mediano; migrable a búsqueda full-text si crece.

@@ -81,6 +81,23 @@ describe("webhooks de Mercado Pago", () => {
     expect((await db.select().from(s.productVariants).where(eq(s.productVariants.id, base.product.variant.id)))[0].stockOnHand).toBe(stock);
   });
 
+  it("archivos privados: anónimo sin firma no accede; con enlace firmado vigente sí", async () => {
+    const { GET } = await import("@/app/api/private-media/[id]/route");
+    const { saveUpload, REFERENCE_MIME } = await import("@/lib/storage");
+    const { signResource } = await import("@/lib/crypto");
+    const sharp = (await import("sharp")).default;
+    const png = await sharp({ create: { width: 120, height: 120, channels: 3, background: "#FC938E" } }).png().toBuffer();
+    process.env.STORAGE_DIR = "./storage-test";
+    const m = await saveUpload({ data: png, visibility: "private", allowed: REFERENCE_MIME, maxBytes: 1e6 });
+    const ctx = (id: string) => ({ params: Promise.resolve({ id }) }) as never;
+    expect((await GET(new Request(`http://t/api/private-media/${m.id}`), ctx(m.id))).status).toBe(403);
+    expect((await GET(new Request(`http://t/api/private-media/${m.id}?sig=123.falsa`), ctx(m.id))).status).toBe(403);
+    const sig = encodeURIComponent(signResource(`private:${m.id}`, 60));
+    const ok = await GET(new Request(`http://t/api/private-media/${m.id}?sig=${sig}`), ctx(m.id));
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get("cache-control")).toContain("no-store");
+  });
+
   it("acceso a pedidos: token correcto sí, id sin token o token ajeno no", async () => {
     expect(await authorizeOrderAccess(orderId, orderAccessToken(orderId))).not.toBeNull();
     expect(await authorizeOrderAccess(orderId, null)).toBeNull();
